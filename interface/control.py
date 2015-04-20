@@ -97,7 +97,6 @@ class HelloWorld:
     def __init__(self):
         # create a new window
         self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
-        # self.window.set_decorated(False)
 
         # When the window is given the "delete_event" signal (this is given
         # by the window manager, usually by the "close" option, or on the
@@ -162,8 +161,15 @@ class HelloWorld:
         map(lambda l: l.show(), (bix, bux, box))
 
         self.window.show()
-        self.window.set_default_size(320, 240)
-        # self.window.fullscreen()
+
+        window = gtk.Window()
+        screen = window.get_screen()
+        if screen.get_width() < 400:
+            self.window.set_decorated(False)
+            self.window.fullscreen()
+        else:
+            self.window.set_default_size(320, 240)
+
 
 
     def main(self):
