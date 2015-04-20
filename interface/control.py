@@ -63,20 +63,30 @@ class LightButton(gtk.Button):
 
 class HelloWorld:
 
-    # This is a callback function. The data arguments are ignored
-    # in this example. More on callbacks below.
-    def hello(self, widget, data=None):
-        self._bridge.set_light( 1, 'on', True)
-
     def click(self, widget, light=None):
+        if self.sleeping:
+            self.screen_on()
+            return
+
         light.toggle()
 
-
     def to_sleep(self, widget, data=None):
+        if self.sleeping:
+            self.screen_on()
+            return
+
         for light in  self._bridge.lights:
             light.on = False
-        commands.getstatusoutput('/home/pi/mine/bin/off')
+        self.screen_off()
+        map(lambda l: l.updateLabel(), self.buttons)
 
+    def screen_off(self):
+        commands.getstatusoutput('/home/pi/mine/bin/off')
+        self.sleeping = True
+
+    def screen_on(self):
+        commands.getstatusoutput('/home/pi/mine/bin/on')
+        self.sleeping = False
 
     def delete_event(self, widget, event, data=None):
         # If you return FALSE in the "delete_event" signal handler,
@@ -97,6 +107,7 @@ class HelloWorld:
     def __init__(self):
         # create a new window
         self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+        self.sleeping = False
 
         # When the window is given the "delete_event" signal (this is given
         # by the window manager, usually by the "close" option, or on the
