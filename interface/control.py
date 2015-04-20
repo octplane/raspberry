@@ -5,18 +5,20 @@
 import pygtk
 pygtk.require('2.0')
 import gtk
+import commands
 from phue import Bridge
 
 
 class GroupButton(gtk.Button):
-    def __init__(self):
-        gtk.Button.__init__(self, stock= gtk.STOCK_OK)
+    def __init__(self, win):
+        gtk.Button.__init__(self)
         self.set_use_stock(True)
+        self.win = win
 
     def set_group_id(self, br,  l):
         self.br = br
         self.group_id = l
-        self.updateLabel()
+        map(lambda l: l.updateLabel(), self.win.buttons)
 
     def state(self):
         return all(map(lambda l: self.br.get_light(int(l), 'on') , self.br.get_group(self.group_id, 'lights')))
@@ -28,21 +30,21 @@ class GroupButton(gtk.Button):
             self.set_label("On " + self.br.get_group(self.group_id, 'name'))
 
     def toggle(self):
-        print self.state()
         if self.state():
             self.br.set_group(self.group_id, 'on', False)
         else:
             self.br.set_group(self.group_id, 'on', True)
-        self.updateLabel()
+        map(lambda l: l.updateLabel(), self.win.buttons)
 
 
 class LightButton(gtk.Button):
-    def __init__(self):
-        gtk.Button.__init__(self, gtk.STOCK_OK)
+    def __init__(self, win):
+        gtk.Button.__init__(self)
+        self.win = win
 
     def set_light(self, l):
         self.light = l
-        self.updateLabel()
+        map(lambda l: l.updateLabel(), self.win.buttons)
 
     def updateLabel(self):
         if self.light.on:
@@ -55,7 +57,7 @@ class LightButton(gtk.Button):
             self.light.on = False
         else:
             self.light.on = True
-        self.updateLabel()
+        map(lambda l: l.updateLabel(), self.win.buttons)
 
 
 
@@ -68,6 +70,12 @@ class HelloWorld:
 
     def click(self, widget, light=None):
         light.toggle()
+
+
+    def to_sleep(self, widget, data=None):
+        for light in  self._bridge.lights:
+            light.on = False
+        commands.getstatusoutput('/home/pi/mine/bin/off')
 
 
     def delete_event(self, widget, event, data=None):
@@ -119,7 +127,7 @@ class HelloWorld:
         self.buttons = []
         for light in  self._bridge.lights:
 
-            but = LightButton()
+            but = LightButton(self)
             but.set_light(light)
             self.buttons.append(but)
             but.connect("clicked", self.click, but)
@@ -129,7 +137,9 @@ class HelloWorld:
         bux = gtk.VBox(spacing=0)
 
         for group in self._bridge.groups:
-            but = GroupButton()
+            but = GroupButton(self)
+            self.buttons.append(but)
+
             but.set_group_id(self._bridge, group.group_id)
             but.connect("clicked", self.click, but)
             bux.pack_start(but, True, True, 0)
@@ -137,12 +147,17 @@ class HelloWorld:
 
         bix.pack_start(bux, True, True, 0)
 
+
+        to_sleep = gtk.Button("Sleep")
+        to_sleep.connect("clicked", self.to_sleep)
+        to_sleep.show()
+        bux.pack_start(to_sleep)
+
         exit_button = gtk.Button("Quit", gtk.STOCK_QUIT)
         exit_button.connect("clicked", self.destroy)
         exit_button.show()
-
         bux.pack_start(exit_button)
-        # and the window
+
         self.window.add(bix)
         map(lambda l: l.show(), (bix, bux, box))
 
