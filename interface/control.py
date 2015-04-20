@@ -10,7 +10,8 @@ from phue import Bridge
 
 class GroupButton(gtk.Button):
     def __init__(self):
-        gtk.Button.__init__(self)
+        gtk.Button.__init__(self, stock= gtk.STOCK_OK)
+        self.set_use_stock(True)
 
     def set_group_id(self, br,  l):
         self.br = br
@@ -22,9 +23,9 @@ class GroupButton(gtk.Button):
 
     def updateLabel(self):
         if self.state():
-            self.set_label("Eteindre " + self.br.get_group(self.group_id, 'name'))
+            self.set_label("Off " + self.br.get_group(self.group_id, 'name'))
         else:
-            self.set_label("Allumer " + self.br.get_group(self.group_id, 'name'))
+            self.set_label("On " + self.br.get_group(self.group_id, 'name'))
 
     def toggle(self):
         print self.state()
@@ -37,7 +38,7 @@ class GroupButton(gtk.Button):
 
 class LightButton(gtk.Button):
     def __init__(self):
-        gtk.Button.__init__(self)
+        gtk.Button.__init__(self, gtk.STOCK_OK)
 
     def set_light(self, l):
         self.light = l
@@ -45,9 +46,9 @@ class LightButton(gtk.Button):
 
     def updateLabel(self):
         if self.light.on:
-            self.set_label("Eteindre " + self.light.name)
+            self.set_label("Off " + self.light.name)
         else:
-            self.set_label("Allumer " + self.light.name)
+            self.set_label("On " + self.light.name)
 
     def toggle(self):
         if self.light.on:
@@ -135,11 +136,18 @@ class HelloWorld:
             but.show()
 
         bix.pack_start(bux, True, True, 0)
+
+        exit_button = gtk.Button("Quit", gtk.STOCK_QUIT)
+        exit_button.connect("clicked", self.destroy)
+        exit_button.show()
+
+        bux.pack_start(exit_button)
         # and the window
         self.window.add(bix)
         map(lambda l: l.show(), (bix, bux, box))
 
         self.window.show()
+        self.window.set_default_size(320, 240)
         # self.window.fullscreen()
 
 
